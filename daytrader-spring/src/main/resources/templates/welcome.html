@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Welcome</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="welcome-page">
+        <h1>DayTrader</h1>
+        <h2>Stock Trading Benchmark Application</h2>
+        <p>Built with Spring Boot 3.x, Thymeleaf, HTMX, and PostgreSQL</p>
+        <div class="welcome-actions">
+            <a th:href="@{/login}" class="btn btn-primary">Login</a>
+            <a th:href="@{/register}" class="btn btn-secondary">Register</a>
+        </div>
+        <div class="welcome-info">
+            <h3>Features</h3>
+            <ul>
+                <li>Real-time stock trading simulation</li>
+                <li>Portfolio management with holdings tracking</li>
+                <li>Live market summary with WebSocket updates</li>
+                <li>Asynchronous order processing</li>
+                <li>Compatible with Linux ppc64le (Power8)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

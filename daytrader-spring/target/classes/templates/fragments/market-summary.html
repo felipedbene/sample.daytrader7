@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="marketSummary" class="market-summary" th:if="${summary}">
+    <h3>Market Summary</h3>
+    <div class="market-stats">
+        <div class="stat">
+            <span class="stat-label">TSIA</span>
+            <span class="stat-value" th:text="${summary.TSIA}">0.00</span>
+            <span th:if="${tsiaChange}" th:class="${tsiaChange.doubleValue() >= 0 ? 'positive' : 'negative'}"
+                  th:text="${tsiaChange}">0.00</span>
+            <span th:if="${tsiaChangePercent}"
+                  th:class="${tsiaChangePercent.doubleValue() >= 0 ? 'positive' : 'negative'}"
+                  th:text="'(' + ${tsiaChangePercent} + '%)'">0.00%</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Volume</span>
+            <span class="stat-value" th:text="${#numbers.formatDecimal(summary.totalVolume, 0, 0)}">0</span>
+        </div>
+    </div>
+    <div class="market-movers">
+        <div class="top-gainers">
+            <h4>Top Gainers</h4>
+            <table>
+                <tr th:each="q : ${summary.topGainers}">
+                    <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
+                    <td th:text="${q.price}">0.00</td>
+                    <td class="positive" th:text="${q.change}">0.00</td>
+                </tr>
+            </table>
+        </div>
+        <div class="top-losers">
+            <h4>Top Losers</h4>
+            <table>
+                <tr th:each="q : ${summary.topLosers}">
+                    <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
+                    <td th:text="${q.price}">0.00</td>
+                    <td class="negative" th:text="${q.change}">0.00</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

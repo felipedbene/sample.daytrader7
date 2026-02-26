@@ -1,0 +1,69 @@
+package com.ibm.daytrader.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.ibm.daytrader.repository.AccountProfileRepository;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/welcome", "/register", "/login", "/error/**",
+                        "/css/**", "/js/**", "/images/**", "/ws/**",
+                        "/h2-console/**").permitAll()
+                .requestMatchers("/admin/**", "/config/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/tradehome", true)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/welcome")
+                .invalidateHttpSession(true)
+            )
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/ws/**", "/h2-console/**")
+            )
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin()) // for H2 console
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(AccountProfileRepository profileRepo) {
+        return username -> {
+            var profile = profileRepo.findById(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+            return User.withUsername(profile.getUserID())
+                    .password(profile.getPassword())
+                    .roles("USER", "ADMIN")
+                    .build();
+        };
+    }
+
+    @Bean
+    @SuppressWarnings("deprecation")
+    public PasswordEncoder passwordEncoder() {
+        // Plaintext for backward compatibility with the original DayTrader password scheme.
+        // In production, migrate to BCryptPasswordEncoder with DelegatingPasswordEncoder.
+        return NoOpPasswordEncoder.getInstance();
+    }
+}

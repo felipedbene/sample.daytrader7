@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Configuration</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2>DayTrader Configuration</h2>
+
+    <div th:if="${result}" class="alert alert-success">
+        <pre th:text="${result}">result</pre>
+    </div>
+    <div th:if="${stats}">
+        <h3>Reset Statistics</h3>
+        <pre th:text="${stats}">stats</pre>
+    </div>
+
+    <div th:if="${config}">
+        <form th:action="@{/config/update}" method="post" class="form">
+            <h3>Runtime Parameters</h3>
+            <div class="form-group">
+                <label for="maxUsers">Max Users</label>
+                <input type="number" id="maxUsers" name="maxUsers" th:value="${config.maxUsers}">
+            </div>
+            <div class="form-group">
+                <label for="maxQuotes">Max Quotes</label>
+                <input type="number" id="maxQuotes" name="maxQuotes" th:value="${config.maxQuotes}">
+            </div>
+            <div class="form-group">
+                <label for="marketSummaryIntervalMs">Market Summary Interval (ms)</label>
+                <input type="number" id="marketSummaryIntervalMs" name="marketSummaryIntervalMs"
+                       th:value="${config.marketSummaryIntervalMs}">
+            </div>
+            <div class="form-group">
+                <label for="percentSentToWebsocket">Percent Sent To WebSocket</label>
+                <input type="number" id="percentSentToWebsocket" name="percentSentToWebsocket"
+                       th:value="${config.percentSentToWebsocket}">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="updateQuotePrices" th:checked="${config.updateQuotePrices}">
+                    Update Quote Prices
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="publishQuotePriceChange" th:checked="${config.publishQuotePriceChange}">
+                    Publish Quote Price Change (WebSocket)
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="displayOrderAlerts" th:checked="${config.displayOrderAlerts}">
+                    Display Order Alerts
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="longRun" th:checked="${config.longRun}">
+                    Long Run (delete closed orders)
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Configuration</button>
+        </form>
+    </div>
+
+    <h3>Database Actions</h3>
+    <div class="admin-actions">
+        <form th:action="@{/admin/populate}" method="post" style="display:inline">
+            <button type="submit" class="btn btn-secondary"
+                    onclick="return confirm('This will populate the database. Continue?')">
+                Populate Database
+            </button>
+        </form>
+        <form th:action="@{/admin/reset}" method="post" style="display:inline">
+            <input type="hidden" name="deleteAll" value="true">
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('This will DELETE ALL data. Are you sure?')">
+                Reset Database
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

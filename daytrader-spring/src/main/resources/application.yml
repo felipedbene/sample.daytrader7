@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: daytrader
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: true
+
+server:
+  port: 9082
+
+trade:
+  max-users: 15000
+  max-quotes: 10000
+  max-holdings: 10
+  order-fee: 24.95
+  market-summary-interval-ms: 20000
+  update-quote-prices: true
+  publish-quote-price-change: true
+  percent-sent-to-websocket: 5
+  display-order-alerts: true
+  long-run: true

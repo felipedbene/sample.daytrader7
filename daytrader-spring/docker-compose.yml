@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: daytrader
+      POSTGRES_USER: daytrader
+      POSTGRES_PASSWORD: daytrader
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  daytrader:
+    build: .
+    ports:
+      - "9082:9082"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: daytrader
+      DB_USER: daytrader
+      DB_PASS: daytrader
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

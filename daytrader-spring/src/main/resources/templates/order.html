@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Order</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2>Order Confirmation</h2>
+
+    <div th:if="${order}">
+        <table class="data-table">
+            <tr>
+                <th>Order ID</th>
+                <td th:text="${order.orderID}">0</td>
+            </tr>
+            <tr>
+                <th>Order Type</th>
+                <td th:text="${order.orderType}">buy</td>
+            </tr>
+            <tr>
+                <th>Order Status</th>
+                <td th:text="${order.orderStatus}">open</td>
+            </tr>
+            <tr>
+                <th>Symbol</th>
+                <td th:text="${order.symbol}">s:0</td>
+            </tr>
+            <tr>
+                <th>Quantity</th>
+                <td th:text="${order.quantity}">0</td>
+            </tr>
+            <tr>
+                <th>Price</th>
+                <td th:text="'$' + ${order.price}">$0.00</td>
+            </tr>
+            <tr>
+                <th>Order Fee</th>
+                <td th:text="'$' + ${order.orderFee}">$0.00</td>
+            </tr>
+            <tr>
+                <th>Total</th>
+                <td th:text="'$' + ${order.price.multiply(T(java.math.BigDecimal).valueOf(order.quantity)).add(order.orderFee).setScale(2, T(java.math.RoundingMode).HALF_UP)}">$0.00</td>
+            </tr>
+            <tr>
+                <th>Open Date</th>
+                <td th:text="${order.openDate}">-</td>
+            </tr>
+            <tr>
+                <th>Completion Date</th>
+                <td th:text="${order.completionDate}">-</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="actions">
+        <a th:href="@{/portfolio}" class="btn btn-primary">View Portfolio</a>
+        <a th:href="@{/quote}" class="btn btn-secondary">Get More Quotes</a>
+        <a th:href="@{/tradehome}" class="btn btn-secondary">Home</a>
+    </div>
+</div>
+</body>
+</html>
