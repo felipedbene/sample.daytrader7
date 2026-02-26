@@ -66,6 +66,23 @@
         </form>
     </div>
 
+    <h3>Trading Scenario (Load Generator)</h3>
+    <div th:if="${scenario}" class="admin-actions" style="margin-bottom: 20px">
+        <p th:if="${scenario.running}" style="font-weight:bold; color:green">
+            Running: <span th:text="${scenario.stats}">stats</span>
+        </p>
+        <p th:unless="${scenario.running}" style="color:gray">Stopped</p>
+
+        <form th:unless="${scenario.running}" th:action="@{/admin/scenario/start}" method="post" style="display:inline">
+            <label for="threads">Threads:</label>
+            <input type="number" id="threads" name="threads" value="4" min="1" max="64" style="width:60px">
+            <button type="submit" class="btn btn-primary">Start Scenario</button>
+        </form>
+        <form th:if="${scenario.running}" th:action="@{/admin/scenario/stop}" method="post" style="display:inline">
+            <button type="submit" class="btn btn-danger">Stop Scenario</button>
+        </form>
+    </div>
+
     <h3>Database Actions</h3>
     <div class="admin-actions">
         <form th:action="@{/admin/populate}" method="post" style="display:inline">

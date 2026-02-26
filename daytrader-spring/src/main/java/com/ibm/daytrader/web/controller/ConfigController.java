@@ -8,19 +8,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ibm.daytrader.config.TradeProperties;
+import com.ibm.daytrader.service.TradingScenarioService;
 
 @Controller
 public class ConfigController {
 
     private final TradeProperties tradeProperties;
+    private final TradingScenarioService scenarioService;
 
-    public ConfigController(TradeProperties tradeProperties) {
+    public ConfigController(TradeProperties tradeProperties, TradingScenarioService scenarioService) {
         this.tradeProperties = tradeProperties;
+        this.scenarioService = scenarioService;
     }
 
     @GetMapping("/config")
     public String config(Model model) {
         model.addAttribute("config", tradeProperties);
+        model.addAttribute("scenario", scenarioService);
         return "config";
     }
 
