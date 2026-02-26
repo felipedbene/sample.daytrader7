@@ -5,10 +5,8 @@ import java.math.BigDecimal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.ibm.daytrader.config.TradeProperties;
-import com.ibm.daytrader.dto.RunStatsDTO;
 import com.ibm.daytrader.entity.AccountDataBean;
 import com.ibm.daytrader.util.TradeConfig;
 
@@ -28,7 +26,9 @@ public class DatabaseInitService {
         this.tradeConfig = tradeConfig;
     }
 
-    @Transactional
+    // No @Transactional here — each service call runs in its own transaction.
+    // This prevents a single failure from rolling back the entire populate,
+    // and avoids an unbounded Hibernate persistence context.
     public String populateDatabase() {
         int maxQuotes = tradeProperties.getMaxQuotes();
         int maxUsers = tradeProperties.getMaxUsers();
@@ -38,6 +38,9 @@ public class DatabaseInitService {
         sb.append("Populating database with ").append(maxQuotes).append(" quotes and ")
                 .append(maxUsers).append(" users\n");
 
+        int quotesCreated = 0;
+        int quoteErrors = 0;
+
         // Create quotes
         for (int i = 0; i < maxQuotes; i++) {
             String symbol = "s:" + i;
@@ -45,18 +48,26 @@ public class DatabaseInitService {
             BigDecimal price = tradeConfig.rndBigDecimal(1000.0f);
             try {
                 tradeService.createQuote(symbol, companyName, price);
-                if (i % 1000 == 0) {
-                    log.info("Created {} quotes", i);
-                }
+                quotesCreated++;
             } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("duplicate")) {
-                    // Quote already exists, skip
-                } else {
-                    sb.append("Error creating quote ").append(symbol).append(": ").append(e.getMessage()).append("\n");
+                quoteErrors++;
+                if (e.getMessage() == null || !e.getMessage().contains("duplicate")) {
+                    log.warn("Error creating quote {}: {}", symbol, e.getMessage());
                 }
             }
+            if (i % 1000 == 0 && i > 0) {
+                log.info("Quote progress: {}/{}", i, maxQuotes);
+            }
         }
-        sb.append("Created ").append(maxQuotes).append(" quotes\n");
+        sb.append("Created ").append(quotesCreated).append(" quotes");
+        if (quoteErrors > 0) {
+            sb.append(" (").append(quoteErrors).append(" skipped/errors)");
+        }
+        sb.append("\n");
+        log.info("Quotes done: {} created, {} errors", quotesCreated, quoteErrors);
+
+        int usersCreated = 0;
+        int userErrors = 0;
 
         // Create users and initial holdings
         for (int i = 0; i < maxUsers; i++) {
@@ -72,26 +83,35 @@ public class DatabaseInitService {
                         address, email, creditcard, openBalance);
 
                 if (account != null) {
+                    usersCreated++;
                     // Create some initial holdings via buy orders
                     int numHoldings = tradeConfig.rndInt(maxHoldings) + 1;
                     for (int j = 0; j < numHoldings; j++) {
-                        String symbol = tradeConfig.rndSymbol();
-                        double quantity = tradeConfig.rndQuantity();
-                        tradeService.buy(userID, symbol, quantity);
+                        try {
+                            String symbol = tradeConfig.rndSymbol();
+                            double quantity = tradeConfig.rndQuantity();
+                            tradeService.buy(userID, symbol, quantity);
+                        } catch (Exception e) {
+                            log.warn("Error creating holding for {}: {}", userID, e.getMessage());
+                        }
                     }
                 }
-
-                if (i % 1000 == 0) {
-                    log.info("Created {} users", i);
-                }
             } catch (Exception e) {
-                sb.append("Error creating user ").append(userID).append(": ").append(e.getMessage()).append("\n");
+                userErrors++;
+                log.warn("Error creating user {}: {}", userID, e.getMessage());
+            }
+            if (i % 1000 == 0 && i > 0) {
+                log.info("User progress: {}/{}", i, maxUsers);
             }
         }
-        sb.append("Created ").append(maxUsers).append(" users with holdings\n");
-        sb.append("Database population complete.");
+        sb.append("Created ").append(usersCreated).append(" users with holdings");
+        if (userErrors > 0) {
+            sb.append(" (").append(userErrors).append(" errors)");
+        }
+        sb.append("\nDatabase population complete.");
 
-        log.info("Database population complete: {} quotes, {} users", maxQuotes, maxUsers);
+        log.info("Population complete: {} quotes, {} users, {} user errors",
+                quotesCreated, usersCreated, userErrors);
         return sb.toString();
     }
 }
