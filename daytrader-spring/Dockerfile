@@ -14,6 +14,9 @@ RUN ./mvnw package -DskipTests -B
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create non-root user
 RUN groupadd -r daytrader && useradd -r -g daytrader daytrader
 
@@ -24,4 +27,7 @@ USER daytrader
 
 EXPOSE 9082
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -f http://localhost:9082/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS:-} -jar app.jar"]

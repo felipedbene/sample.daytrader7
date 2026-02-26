@@ -1,0 +1,35 @@
+# Production deployment - connects to bare-metal PostgreSQL on the host
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Required environment variables (set in .env or passed via shell):
+#   IMAGE_TAG - Docker image tag (defaults to "latest")
+#   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS
+
+services:
+  daytrader:
+    image: ghcr.io/felipedbene/sample.daytrader7:${IMAGE_TAG:-latest}
+    container_name: daytrader
+    restart: unless-stopped
+    ports:
+      - "9082:9082"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
