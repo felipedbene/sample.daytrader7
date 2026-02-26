@@ -345,11 +345,12 @@ public class TradeServiceImpl implements TradeService {
         AccountDataBean account = new AccountDataBean(
                 0, 0, null, LocalDateTime.now(), openBalance, openBalance, userID);
 
-        profile.setAccount(account);
-        account.setProfile(profile);
+        profile = profileRepository.save(profile);
 
-        profileRepository.save(profile);
+        account.setProfile(profile);
         account = accountRepository.save(account);
+
+        profile.setAccount(account);
 
         return account;
     }
