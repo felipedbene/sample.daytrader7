@@ -20,4 +20,8 @@ public interface OrderRepository extends JpaRepository<OrderDataBean, Integer> {
     @Modifying
     @Query("UPDATE OrderDataBean o SET o.orderStatus = 'completed' WHERE o.orderStatus = 'closed' AND o.account.profile.userID = :userID")
     int markClosedOrdersCompleted(@Param("userID") String userID);
+
+    @Modifying
+    @Query("UPDATE OrderDataBean o SET o.holding = null WHERE o.holding.holdingID = :holdingID")
+    int clearHoldingReferences(@Param("holdingID") Integer holdingID);
 }

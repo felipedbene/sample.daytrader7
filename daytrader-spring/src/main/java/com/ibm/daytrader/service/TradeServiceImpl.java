@@ -165,8 +165,9 @@ public class TradeServiceImpl implements TradeService {
                 order.cancel();
                 throw new RuntimeException("Unable to sell order " + orderID + " - holding already sold");
             }
+            // Clear FK references on all orders (buy + sell) before deleting
+            orderRepository.clearHoldingReferences(holding.getHoldingID());
             holdingRepository.delete(holding);
-            order.setHolding(null);
         }
 
         order.setOrderStatus("closed");
