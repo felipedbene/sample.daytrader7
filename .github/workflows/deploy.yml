@@ -1,0 +1,152 @@
+name: Build and Deploy to P8
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'daytrader-spring/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests during build'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
+    defaults:
+      run:
+        working-directory: daytrader-spring
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests
+        run: ./mvnw verify -B -Dspring.profiles.active=test
+
+  build-and-deploy:
+    name: Build on P8 and Deploy
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    permissions:
+      packages: write
+    steps:
+      - name: Generate image tag
+        id: meta
+        run: |
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "tag=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.P8_SSH_KEY }}" > ~/.ssh/p8_key
+          chmod 600 ~/.ssh/p8_key
+          ssh-keyscan -H ${{ secrets.P8_SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Build and deploy on P8
+        run: |
+          ssh -i ~/.ssh/p8_key \
+              -o StrictHostKeyChecking=accept-new \
+              -o ServerAliveInterval=60 \
+              ${{ secrets.P8_SSH_USER }}@${{ secrets.P8_SSH_HOST }} \
+              bash -s -- \
+              "${{ steps.meta.outputs.tag }}" \
+              "${{ secrets.GHCR_TOKEN }}" \
+              "${{ secrets.DB_HOST }}" \
+              "${{ secrets.DB_PORT }}" \
+              "${{ secrets.DB_NAME }}" \
+              "${{ secrets.DB_USER }}" \
+              "${{ secrets.DB_PASSWORD }}" \
+              <<'DEPLOY_SCRIPT'
+          set -euo pipefail
+
+          IMAGE_TAG="$1"
+          GHCR_TOKEN="$2"
+          DB_HOST="$3"
+          DB_PORT="$4"
+          DB_NAME="$5"
+          DB_USER="$6"
+          DB_PASS="$7"
+
+          DEPLOY_DIR="$HOME/sample.daytrader7"
+          IMAGE_NAME="ghcr.io/felipedbene/sample.daytrader7"
+          FULL_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+
+          echo "=== Step 1: Update repository ==="
+          cd "$DEPLOY_DIR"
+          git fetch origin master
+          git reset --hard origin/master
+
+          echo "=== Step 2: Build Docker image (native ppc64le) ==="
+          cd daytrader-spring
+          docker build -t "${FULL_IMAGE}" -t "${IMAGE_NAME}:latest" .
+
+          echo "=== Step 3: Push to GHCR ==="
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u felipedbene --password-stdin
+          docker push "${FULL_IMAGE}"
+          docker push "${IMAGE_NAME}:latest"
+
+          echo "=== Step 4: Write .env file ==="
+          cat > .env <<ENV_FILE
+          IMAGE_TAG=${IMAGE_TAG}
+          DB_HOST=${DB_HOST}
+          DB_PORT=${DB_PORT}
+          DB_NAME=${DB_NAME}
+          DB_USER=${DB_USER}
+          DB_PASS=${DB_PASS}
+          ENV_FILE
+          chmod 600 .env
+
+          echo "=== Step 5: Deploy ==="
+          docker compose -f docker-compose.prod.yml down --timeout 30 || true
+          docker compose -f docker-compose.prod.yml up -d
+
+          echo "=== Step 6: Health check ==="
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9082/actuator/health > /dev/null 2>&1; then
+              echo "Application is healthy after $((i * 10)) seconds"
+              docker image prune -f --filter "until=24h" || true
+              exit 0
+            fi
+            echo "  Attempt $i/30 - waiting..."
+            sleep 10
+          done
+
+          echo "ERROR: Application failed health check within 300 seconds"
+          docker compose -f docker-compose.prod.yml logs --tail 100
+          exit 1
+          DEPLOY_SCRIPT
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/p8_key
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "## Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "- **Image**: \`ghcr.io/felipedbene/sample.daytrader7:${{ steps.meta.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Target**: \`${{ secrets.P8_SSH_HOST }}:9082\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Check the deploy step logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
