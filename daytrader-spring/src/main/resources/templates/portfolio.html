@@ -8,7 +8,7 @@
 <body>
 <div layout:fragment="content">
     <h2>Portfolio</h2>
-    <p>Holdings Total: <strong th:text="'$' + ${holdingsTotal}">$0.00</strong></p>
+    <p>Holdings Total: <strong th:text="'$' + ${#numbers.formatDecimal(holdingsTotal, 1, 'COMMA', 2, 'POINT')}">$0.00</strong></p>
 
     <div th:if="${#lists.isEmpty(holdings)}">
         <p>You don't have any holdings yet. <a th:href="@{/quote}">Buy some stocks!</a></p>
@@ -33,14 +33,14 @@
                 <td>
                     <a th:href="@{/quote(symbols=${holding.quoteID})}" th:text="${holding.quoteID}">s:0</a>
                 </td>
-                <td th:text="${holding.quantity}">0</td>
-                <td th:text="'$' + ${holding.purchasePrice}">$0.00</td>
-                <td th:text="${holding.quote != null ? '$' + holding.quote.price : 'N/A'}">$0.00</td>
-                <td th:text="${holding.purchaseDate}">-</td>
+                <td th:text="${#numbers.formatInteger(holding.quantity, 1, 'COMMA')}">0</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(holding.purchasePrice, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                <td th:text="${holding.quote != null ? '$' + #numbers.formatDecimal(holding.quote.price, 1, 'COMMA', 2, 'POINT') : 'N/A'}">$0.00</td>
+                <td th:text="${#temporals.format(holding.purchaseDate, 'MMM dd, yyyy h:mm a')}">-</td>
                 <td th:if="${holding.quote != null}"
                     th:with="gain=${holding.quote.price.subtract(holding.purchasePrice).multiply(T(java.math.BigDecimal).valueOf(holding.quantity))}"
                     th:class="${gain.doubleValue() >= 0 ? 'positive' : 'negative'}"
-                    th:text="'$' + ${gain.setScale(2, T(java.math.RoundingMode).HALF_UP)}">$0.00</td>
+                    th:text="'$' + ${#numbers.formatDecimal(gain, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
                 <td th:if="${holding.quote == null}">N/A</td>
                 <td>
                     <form th:action="@{/sell}" method="post" style="display:inline">

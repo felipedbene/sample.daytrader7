@@ -6,16 +6,16 @@
     <div class="market-stats">
         <div class="stat">
             <span class="stat-label">TSIA</span>
-            <span class="stat-value" th:text="${summary.TSIA}">0.00</span>
+            <span class="stat-value" th:text="${#numbers.formatDecimal(summary.TSIA, 1, 'COMMA', 2, 'POINT')}">0.00</span>
             <span th:if="${tsiaChange}" th:class="${tsiaChange.doubleValue() >= 0 ? 'positive' : 'negative'}"
-                  th:text="${tsiaChange}">0.00</span>
+                  th:text="${#numbers.formatDecimal(tsiaChange, 1, 'COMMA', 2, 'POINT')}">0.00</span>
             <span th:if="${tsiaChangePercent}"
                   th:class="${tsiaChangePercent.doubleValue() >= 0 ? 'positive' : 'negative'}"
-                  th:text="'(' + ${tsiaChangePercent} + '%)'">0.00%</span>
+                  th:text="'(' + ${#numbers.formatDecimal(tsiaChangePercent, 1, 'COMMA', 2, 'POINT')} + '%)'">0.00%</span>
         </div>
         <div class="stat">
             <span class="stat-label">Volume</span>
-            <span class="stat-value" th:text="${#numbers.formatDecimal(summary.totalVolume, 0, 0)}">0</span>
+            <span class="stat-value" th:text="${#numbers.formatInteger(summary.totalVolume, 1, 'COMMA')}">0</span>
         </div>
     </div>
     <div class="market-movers">
@@ -24,8 +24,8 @@
             <table>
                 <tr th:each="q : ${summary.topGainers}">
                     <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
-                    <td th:attr="data-symbol=${q.symbol}" th:text="${q.price}">0.00</td>
-                    <td class="positive" th:text="${q.change}">0.00</td>
+                    <td th:attr="data-symbol=${q.symbol}" th:text="'$' + ${#numbers.formatDecimal(q.price, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td class="positive" th:text="${#numbers.formatDecimal(q.change, 1, 'COMMA', 2, 'POINT')}">0.00</td>
                 </tr>
             </table>
         </div>
@@ -34,8 +34,8 @@
             <table>
                 <tr th:each="q : ${summary.topLosers}">
                     <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
-                    <td th:attr="data-symbol=${q.symbol}" th:text="${q.price}">0.00</td>
-                    <td class="negative" th:text="${q.change}">0.00</td>
+                    <td th:attr="data-symbol=${q.symbol}" th:text="'$' + ${#numbers.formatDecimal(q.price, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td class="negative" th:text="${#numbers.formatDecimal(q.change, 1, 'COMMA', 2, 'POINT')}">0.00</td>
                 </tr>
             </table>
         </div>

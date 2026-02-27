@@ -45,13 +45,13 @@
                 <tr th:each="quote : ${quotes}">
                     <td th:text="${quote.symbol}">s:0</td>
                     <td th:text="${quote.companyName}">Company</td>
-                    <td th:attr="data-symbol=${quote.symbol}" th:text="'$' + ${quote.price}">$0.00</td>
-                    <td th:text="'$' + ${quote.open}">$0.00</td>
-                    <td th:text="'$' + ${quote.low}">$0.00</td>
-                    <td th:text="'$' + ${quote.high}">$0.00</td>
+                    <td th:attr="data-symbol=${quote.symbol}" th:text="'$' + ${#numbers.formatDecimal(quote.price, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(quote.open, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(quote.low, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(quote.high, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
                     <td th:class="${quote.change >= 0 ? 'positive' : 'negative'}"
-                        th:text="${quote.change}">0.00</td>
-                    <td th:text="${#numbers.formatDecimal(quote.volume, 0, 0)}">0</td>
+                        th:text="${#numbers.formatDecimal(quote.change, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    <td th:text="${#numbers.formatInteger(quote.volume, 1, 'COMMA')}">0</td>
                     <td>
                         <form th:action="@{/buy}" method="post" class="form-inline">
                             <input type="hidden" name="symbol" th:value="${quote.symbol}">

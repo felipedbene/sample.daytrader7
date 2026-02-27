@@ -30,27 +30,27 @@
             </tr>
             <tr>
                 <th>Quantity</th>
-                <td th:text="${order.quantity}">0</td>
+                <td th:text="${#numbers.formatInteger(order.quantity, 1, 'COMMA')}">0</td>
             </tr>
             <tr>
                 <th>Price</th>
-                <td th:text="'$' + ${order.price}">$0.00</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(order.price, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
             </tr>
             <tr>
                 <th>Order Fee</th>
-                <td th:text="'$' + ${order.orderFee}">$0.00</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(order.orderFee, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
             </tr>
             <tr>
                 <th>Total</th>
-                <td th:text="'$' + ${order.price.multiply(T(java.math.BigDecimal).valueOf(order.quantity)).add(order.orderFee).setScale(2, T(java.math.RoundingMode).HALF_UP)}">$0.00</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(order.price.multiply(T(java.math.BigDecimal).valueOf(order.quantity)).add(order.orderFee), 1, 'COMMA', 2, 'POINT')}">$0.00</td>
             </tr>
             <tr>
                 <th>Open Date</th>
-                <td th:text="${order.openDate}">-</td>
+                <td th:text="${#temporals.format(order.openDate, 'MMM dd, yyyy h:mm a')}">-</td>
             </tr>
             <tr>
                 <th>Completion Date</th>
-                <td th:text="${order.completionDate}">-</td>
+                <td th:text="${order.completionDate != null ? #temporals.format(order.completionDate, 'MMM dd, yyyy h:mm a') : '-'}">-</td>
             </tr>
         </table>
     </div>

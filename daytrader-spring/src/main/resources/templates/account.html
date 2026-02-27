@@ -15,16 +15,16 @@
         </div>
         <table class="data-table">
             <tr><th>Account ID</th><td th:text="${account.accountID}">0</td></tr>
-            <tr><th>Created</th><td th:text="${account.creationDate}">-</td></tr>
-            <tr><th>Last Login</th><td th:text="${account.lastLogin}">-</td></tr>
-            <tr><th>Total Logins</th><td th:text="${account.loginCount}">0</td></tr>
-            <tr><th>Total Logouts</th><td th:text="${account.logoutCount}">0</td></tr>
-            <tr><th>Open Balance</th><td th:text="'$' + ${account.openBalance}">$0.00</td></tr>
-            <tr><th>Current Balance</th><td th:text="'$' + ${account.balance}">$0.00</td></tr>
+            <tr><th>Created</th><td th:text="${#temporals.format(account.creationDate, 'MMM dd, yyyy h:mm a')}">-</td></tr>
+            <tr><th>Last Login</th><td th:text="${account.lastLogin != null ? #temporals.format(account.lastLogin, 'MMM dd, yyyy h:mm a') : '-'}">-</td></tr>
+            <tr><th>Total Logins</th><td th:text="${#numbers.formatInteger(account.loginCount, 1, 'COMMA')}">0</td></tr>
+            <tr><th>Total Logouts</th><td th:text="${#numbers.formatInteger(account.logoutCount, 1, 'COMMA')}">0</td></tr>
+            <tr><th>Open Balance</th><td th:text="'$' + ${#numbers.formatDecimal(account.openBalance, 1, 'COMMA', 2, 'POINT')}">$0.00</td></tr>
+            <tr><th>Current Balance</th><td th:text="'$' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">$0.00</td></tr>
             <tr>
                 <th>Gain/Loss</th>
                 <td th:class="${gain.doubleValue() >= 0 ? 'positive' : 'negative'}"
-                    th:text="'$' + ${gain} + ' (' + ${gainPercent} + '%)'">$0.00</td>
+                    th:text="'$' + ${#numbers.formatDecimal(gain, 1, 'COMMA', 2, 'POINT')} + ' (' + ${#numbers.formatDecimal(gainPercent, 1, 'COMMA', 2, 'POINT')} + '%)'">$0.00</td>
             </tr>
         </table>
     </div>
@@ -85,10 +85,10 @@
                         th:text="${order.orderType}">buy</td>
                     <td th:text="${order.orderStatus}">open</td>
                     <td th:text="${order.symbol}">s:0</td>
-                    <td th:text="${order.quantity}">0</td>
-                    <td th:text="'$' + ${order.price}">$0.00</td>
-                    <td th:text="'$' + ${order.orderFee}">$0.00</td>
-                    <td th:text="${order.openDate}">-</td>
+                    <td th:text="${#numbers.formatInteger(order.quantity, 1, 'COMMA')}">0</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(order.price, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(order.orderFee, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="${#temporals.format(order.openDate, 'MMM dd, yyyy h:mm a')}">-</td>
                 </tr>
             </tbody>
         </table>

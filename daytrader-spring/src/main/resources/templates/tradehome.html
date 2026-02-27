@@ -18,8 +18,8 @@
             <div class="card-header">
                 <span class="card-title">Cash Balance</span>
             </div>
-            <div class="card-value" th:text="'$' + ${account.balance}">$0.00</div>
-            <div class="card-subtitle" th:text="'Opening: $' + ${account.openBalance}">Opening: $0.00</div>
+            <div class="card-value" th:text="'$' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
+            <div class="card-subtitle" th:text="'Opening: $' + ${#numbers.formatDecimal(account.openBalance, 1, 'COMMA', 2, 'POINT')}">Opening: $0.00</div>
         </div>
 
         <!-- Holdings Value -->
@@ -28,7 +28,7 @@
                 <span class="card-title">Holdings Value</span>
                 <span class="card-subtitle" th:text="${holdingsCount} + ' positions'">0 positions</span>
             </div>
-            <div class="card-value" th:text="'$' + ${holdingsTotal}">$0.00</div>
+            <div class="card-value" th:text="'$' + ${#numbers.formatDecimal(holdingsTotal, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
         </div>
 
         <!-- Gain/Loss -->
@@ -37,9 +37,9 @@
                 <span class="card-title">Gain / Loss</span>
             </div>
             <div th:class="${gain.doubleValue() >= 0 ? 'card-value positive' : 'card-value negative'}"
-                 th:text="'$' + ${gain}">$0.00</div>
+                 th:text="'$' + ${#numbers.formatDecimal(gain, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
             <span th:class="${gainPercent.doubleValue() >= 0 ? 'stat-badge positive' : 'stat-badge negative'}"
-                  th:text="${gainPercent} + '%'">0%</span>
+                  th:text="${#numbers.formatDecimal(gainPercent, 1, 'COMMA', 2, 'POINT')} + '%'">0%</span>
         </div>
 
         <!-- Account Info -->
@@ -49,7 +49,7 @@
             </div>
             <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;">
                 <div>ID: <strong style="color: var(--text-heading);" th:text="${account.accountID}">0</strong></div>
-                <div>Created: <span th:text="${account.creationDate}">-</span></div>
+                <div>Created: <span th:text="${#temporals.format(account.creationDate, 'MMM dd, yyyy h:mm a')}">-</span></div>
                 <div>Logins: <span th:text="${account.loginCount}">0</span></div>
             </div>
         </div>
@@ -91,10 +91,10 @@
                     <td th:class="${o.orderType == 'buy' ? 'positive' : 'negative'}"
                         th:text="${o.orderType}">buy</td>
                     <td th:text="${o.symbol}">s:0</td>
-                    <td th:text="${o.quantity}">0</td>
-                    <td th:text="'$' + ${o.price}">$0</td>
+                    <td th:text="${#numbers.formatInteger(o.quantity, 1, 'COMMA')}">0</td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(o.price, 1, 'COMMA', 2, 'POINT')}">$0</td>
                     <td th:text="${o.orderStatus}">open</td>
-                    <td th:text="${o.openDate}">-</td>
+                    <td th:text="${#temporals.format(o.openDate, 'MMM dd, yyyy h:mm a')}">-</td>
                 </tr>
             </tbody>
         </table>
