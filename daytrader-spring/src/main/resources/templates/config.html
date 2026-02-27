@@ -13,13 +13,14 @@
         <pre th:text="${result}">result</pre>
     </div>
     <div th:if="${stats}">
-        <h3>Reset Statistics</h3>
         <pre th:text="${stats}">stats</pre>
     </div>
 
-    <div th:if="${config}">
-        <form th:action="@{/config/update}" method="post" class="form">
-            <h3>Runtime Parameters</h3>
+    <div th:if="${config}" class="card">
+        <div class="card-header">
+            <span class="card-title">Runtime Parameters</span>
+        </div>
+        <form th:action="@{/config/update}" method="post">
             <div class="form-group">
                 <label for="maxUsers">Max Users</label>
                 <input type="number" id="maxUsers" name="maxUsers" th:value="${config.maxUsers}">
@@ -66,38 +67,46 @@
         </form>
     </div>
 
-    <h3>Trading Scenario (Load Generator)</h3>
-    <div th:if="${scenario}" class="admin-actions" style="margin-bottom: 20px">
-        <p th:if="${scenario.running}" style="font-weight:bold; color:green">
-            Running: <span th:text="${scenario.stats}">stats</span>
-        </p>
-        <p th:unless="${scenario.running}" style="color:gray">Stopped</p>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Trading Scenario (Load Generator)</span>
+        </div>
+        <div th:if="${scenario}">
+            <p th:if="${scenario.running}" class="positive" style="margin-bottom: 0.75rem;">
+                Running: <span th:text="${scenario.stats}">stats</span>
+            </p>
+            <p th:unless="${scenario.running}" style="color: var(--text-muted); margin-bottom: 0.75rem;">Stopped</p>
 
-        <form th:unless="${scenario.running}" th:action="@{/admin/scenario/start}" method="post" style="display:inline">
-            <label for="threads">Threads:</label>
-            <input type="number" id="threads" name="threads" value="4" min="1" max="64" style="width:60px">
-            <button type="submit" class="btn btn-primary">Start Scenario</button>
-        </form>
-        <form th:if="${scenario.running}" th:action="@{/admin/scenario/stop}" method="post" style="display:inline">
-            <button type="submit" class="btn btn-danger">Stop Scenario</button>
-        </form>
+            <form th:unless="${scenario.running}" th:action="@{/admin/scenario/start}" method="post" class="form-inline">
+                <label for="threads">Threads:</label>
+                <input type="number" id="threads" name="threads" value="4" min="1" max="64" style="width:60px">
+                <button type="submit" class="btn btn-primary">Start Scenario</button>
+            </form>
+            <form th:if="${scenario.running}" th:action="@{/admin/scenario/stop}" method="post" style="display:inline">
+                <button type="submit" class="btn btn-sell">Stop Scenario</button>
+            </form>
+        </div>
     </div>
 
-    <h3>Database Actions</h3>
-    <div class="admin-actions">
-        <form th:action="@{/admin/populate}" method="post" style="display:inline">
-            <button type="submit" class="btn btn-secondary"
-                    onclick="return confirm('This will populate the database. Continue?')">
-                Populate Database
-            </button>
-        </form>
-        <form th:action="@{/admin/reset}" method="post" style="display:inline">
-            <input type="hidden" name="deleteAll" value="true">
-            <button type="submit" class="btn btn-danger"
-                    onclick="return confirm('This will DELETE ALL data. Are you sure?')">
-                Reset Database
-            </button>
-        </form>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Database Actions</span>
+        </div>
+        <div class="admin-actions">
+            <form th:action="@{/admin/populate}" method="post" style="display:inline">
+                <button type="submit" class="btn btn-secondary"
+                        onclick="return confirm('This will populate the database. Continue?')">
+                    Populate Database
+                </button>
+            </form>
+            <form th:action="@{/admin/reset}" method="post" style="display:inline">
+                <input type="hidden" name="deleteAll" value="true">
+                <button type="submit" class="btn btn-danger"
+                        onclick="return confirm('This will DELETE ALL data. Are you sure?')">
+                    Reset Database
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 </body>

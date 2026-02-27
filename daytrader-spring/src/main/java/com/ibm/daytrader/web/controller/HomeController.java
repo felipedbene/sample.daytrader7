@@ -1,12 +1,14 @@
 package com.ibm.daytrader.web.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.ibm.daytrader.entity.AccountDataBean;
+import com.ibm.daytrader.entity.OrderDataBean;
 import com.ibm.daytrader.service.TradeService;
 import com.ibm.daytrader.util.FinancialUtils;
 
@@ -40,6 +42,11 @@ public class HomeController {
         model.addAttribute("holdingsTotal", FinancialUtils.computeHoldingsTotal(holdings));
         model.addAttribute("gain", FinancialUtils.computeGain(account.getBalance(), account.getOpenBalance()));
         model.addAttribute("gainPercent", FinancialUtils.computeGainPercent(account.getBalance(), account.getOpenBalance()));
+
+        // Recent orders (last 5)
+        List<OrderDataBean> allOrders = tradeService.getOrders(userID);
+        List<OrderDataBean> recentOrders = allOrders.stream().limit(5).toList();
+        model.addAttribute("recentOrders", recentOrders);
 
         return "tradehome";
     }

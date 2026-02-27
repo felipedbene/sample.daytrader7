@@ -18,6 +18,14 @@
         <button type="submit" class="btn btn-primary">Get Quotes</button>
     </form>
 
+    <!-- Price chart (single symbol) -->
+    <div th:if="${quotes != null && #lists.size(quotes) == 1}" class="card">
+        <div class="card-header">
+            <span class="card-title" th:text="'Price History: ' + ${quotes[0].symbol}">Chart</span>
+        </div>
+        <div th:id="'chart-' + ${quotes[0].symbol}" class="quote-chart" style="height: 300px;"></div>
+    </div>
+
     <div th:if="${!#lists.isEmpty(quotes)}">
         <table class="data-table">
             <thead>
@@ -37,7 +45,7 @@
                 <tr th:each="quote : ${quotes}">
                     <td th:text="${quote.symbol}">s:0</td>
                     <td th:text="${quote.companyName}">Company</td>
-                    <td th:text="'$' + ${quote.price}">$0.00</td>
+                    <td th:attr="data-symbol=${quote.symbol}" th:text="'$' + ${quote.price}">$0.00</td>
                     <td th:text="'$' + ${quote.open}">$0.00</td>
                     <td th:text="'$' + ${quote.low}">$0.00</td>
                     <td th:text="'$' + ${quote.high}">$0.00</td>
@@ -48,7 +56,7 @@
                         <form th:action="@{/buy}" method="post" class="form-inline">
                             <input type="hidden" name="symbol" th:value="${quote.symbol}">
                             <input type="number" name="quantity" value="100" min="1" step="1" style="width:80px">
-                            <button type="submit" class="btn btn-small btn-primary">Buy</button>
+                            <button type="submit" class="btn btn-small btn-buy">Buy</button>
                         </form>
                     </td>
                 </tr>
@@ -57,8 +65,17 @@
     </div>
 
     <div th:if="${symbols != null && #lists.isEmpty(quotes)}">
-        <p>No quotes found for: <span th:text="${symbols}">symbols</span></p>
+        <p style="color: var(--text-muted);">No quotes found for: <span th:text="${symbols}">symbols</span></p>
     </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script th:src="@{/js/lightweight-charts.standalone.production.js}"></script>
+    <script th:src="@{/js/charts.js}"></script>
+    <script th:if="${quotes != null && #lists.size(quotes) == 1}" th:inline="javascript">
+        var symbol = /*[[${quotes[0].symbol}]]*/ 's:0';
+        DayTraderCharts.initQuoteChart('chart-' + symbol, symbol);
+    </script>
 </div>
 </body>
 </html>

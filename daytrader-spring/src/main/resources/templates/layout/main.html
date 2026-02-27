@@ -5,7 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f0f1a">
     <title layout:title-pattern="$CONTENT_TITLE - DayTrader">DayTrader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script th:src="@{/js/htmx.min.js}"></script>
 </head>
@@ -15,12 +18,25 @@
             <div class="navbar-brand">
                 <a th:href="@{/tradehome}">DayTrader</a>
             </div>
+            <button class="nav-toggle" onclick="this.closest('.navbar').classList.toggle('nav-open')" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
             <div class="navbar-menu" sec:authorize="isAuthenticated()">
-                <a th:href="@{/tradehome}" class="nav-link">Home</a>
-                <a th:href="@{/portfolio}" class="nav-link">Portfolio</a>
-                <a th:href="@{/quote}" class="nav-link">Quotes</a>
-                <a th:href="@{/account}" class="nav-link">Account</a>
-                <a th:href="@{/config}" class="nav-link" sec:authorize="hasRole('ADMIN')">Config</a>
+                <a th:href="@{/tradehome}"
+                   th:classappend="${#request.requestURI == '/tradehome' ? ' active' : ''}"
+                   class="nav-link">Home</a>
+                <a th:href="@{/portfolio}"
+                   th:classappend="${#request.requestURI == '/portfolio' ? ' active' : ''}"
+                   class="nav-link">Portfolio</a>
+                <a th:href="@{/quote}"
+                   th:classappend="${#request.requestURI.startsWith('/quote') ? ' active' : ''}"
+                   class="nav-link">Quotes</a>
+                <a th:href="@{/account}"
+                   th:classappend="${#request.requestURI == '/account' ? ' active' : ''}"
+                   class="nav-link">Account</a>
+                <a th:href="@{/config}" class="nav-link"
+                   th:classappend="${#request.requestURI == '/config' ? ' active' : ''}"
+                   sec:authorize="hasRole('ADMIN')">Config</a>
                 <form th:action="@{/logout}" method="post" style="display:inline">
                     <button type="submit" class="nav-link btn-link">Logout
                         (<span sec:authentication="name">User</span>)
@@ -35,6 +51,9 @@
         <div sec:authorize="isAuthenticated()"
              hx-get="/marketsummary" hx-trigger="load, every 20s" hx-swap="innerHTML"
              class="market-summary-container">
+            <div class="htmx-indicator" style="text-align:center; padding:1rem; color: var(--text-muted);">
+                <span class="spinner"></span> Loading market data...
+            </div>
         </div>
 
         <!-- Flash messages -->
@@ -49,6 +68,19 @@
     <footer>
         <p>DayTrader Spring Boot - Stock Trading Benchmark</p>
     </footer>
+
+    <!-- Toast notifications -->
+    <script th:src="@{/js/toasts.js}"></script>
+
+    <!-- Form submit loading state -->
+    <script>
+        document.addEventListener('submit', function(e) {
+            var btn = e.target.querySelector('button[type="submit"]');
+            if (btn && !btn.classList.contains('is-loading')) {
+                btn.classList.add('is-loading');
+            }
+        });
+    </script>
 
     <div layout:fragment="scripts"></div>
 </body>

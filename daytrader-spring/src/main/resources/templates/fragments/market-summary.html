@@ -24,7 +24,7 @@
             <table>
                 <tr th:each="q : ${summary.topGainers}">
                     <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
-                    <td th:text="${q.price}">0.00</td>
+                    <td th:attr="data-symbol=${q.symbol}" th:text="${q.price}">0.00</td>
                     <td class="positive" th:text="${q.change}">0.00</td>
                 </tr>
             </table>
@@ -34,7 +34,7 @@
             <table>
                 <tr th:each="q : ${summary.topLosers}">
                     <td><a th:href="@{/quote(symbols=${q.symbol})}" th:text="${q.symbol}">s:0</a></td>
-                    <td th:text="${q.price}">0.00</td>
+                    <td th:attr="data-symbol=${q.symbol}" th:text="${q.price}">0.00</td>
                     <td class="negative" th:text="${q.change}">0.00</td>
                 </tr>
             </table>
