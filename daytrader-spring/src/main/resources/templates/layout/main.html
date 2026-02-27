@@ -23,19 +23,19 @@
             </button>
             <div class="navbar-menu" sec:authorize="isAuthenticated()">
                 <a th:href="@{/tradehome}"
-                   th:classappend="${#request.requestURI == '/tradehome' ? ' active' : ''}"
+                   th:classappend="${requestURI == '/tradehome' ? ' active' : ''}"
                    class="nav-link">Home</a>
                 <a th:href="@{/portfolio}"
-                   th:classappend="${#request.requestURI == '/portfolio' ? ' active' : ''}"
+                   th:classappend="${requestURI == '/portfolio' ? ' active' : ''}"
                    class="nav-link">Portfolio</a>
                 <a th:href="@{/quote}"
-                   th:classappend="${#request.requestURI.startsWith('/quote') ? ' active' : ''}"
+                   th:classappend="${requestURI.startsWith('/quote') ? ' active' : ''}"
                    class="nav-link">Quotes</a>
                 <a th:href="@{/account}"
-                   th:classappend="${#request.requestURI == '/account' ? ' active' : ''}"
+                   th:classappend="${requestURI == '/account' ? ' active' : ''}"
                    class="nav-link">Account</a>
                 <a th:href="@{/config}" class="nav-link"
-                   th:classappend="${#request.requestURI == '/config' ? ' active' : ''}"
+                   th:classappend="${requestURI == '/config' ? ' active' : ''}"
                    sec:authorize="hasRole('ADMIN')">Config</a>
                 <form th:action="@{/logout}" method="post" style="display:inline">
                     <button type="submit" class="nav-link btn-link">Logout
