@@ -103,6 +103,25 @@ First login creates the schema (Flyway). The app auto-seeds 15K users + 10K quot
 bash load-test.sh
 ```
 
+## CI/CD Pipeline
+
+```
+Push to master → GitHub Actions (self-hosted runner)
+                    │
+                    ├── Build: Maven package (JDK 21)
+                    │
+                    └── Deploy: SSH into P8 (ppc64le)
+                         ├── git pull
+                         ├── mvnw package (rebuilds on POWER8)
+                         ├── pkill old process
+                         ├── java -jar ... (baremetal, no container)
+                         └── Health check + Discord notification
+```
+
+**Why this works:** Java bytecode is platform-independent. The same `.jar` runs on x86_64 and ppc64le without recompilation. In practice, we rebuild on P8 to ensure native dependencies (if any) match, but the Maven artifacts are identical. This is the original promise of "write once, run anywhere" — finally delivering in 2026 on hardware IBM shipped in 2014.
+
+**No Docker in production.** The Spring Boot app runs directly on the JVM (Eclipse Temurin 21 on Gentoo ppc64le). Docker images exist for portability and are published to `ghcr.io/felipedbene/sample.daytrader7`, but the P8 production deployment is bare-metal Java — faster startup, lower overhead, full access to all 160 threads.
+
 ## The Journey
 
 This project went through three distinct phases:
