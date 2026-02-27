@@ -22,6 +22,9 @@ A complete rewrite of IBM's [DayTrader 7](https://github.com/WASdev/sample.daytr
 
 ## Architecture
 
+![Architecture](docs/architecture.png)
+
+
 ```
 Internet → Cloudflare Tunnel → Authentik Proxy (K8s) → IBM POWER8 S822
                                                          ├── Spring Boot 3 (JDK 21)
