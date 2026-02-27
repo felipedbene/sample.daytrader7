@@ -1,51 +1,126 @@
-# sample.daytrader7 [![Build Status](https://travis-ci.org/WASdev/sample.daytrader7.svg?branch=master)](https://travis-ci.org/WASdev/sample.daytrader7)
+# DayTrader 7 → Spring Boot — Enterprise Java on IBM POWER8
 
-# Java EE7: DayTrader7 Sample
+[![Build & Deploy](https://github.com/felipedbene/sample.daytrader7/actions/workflows/deploy.yml/badge.svg)](https://github.com/felipedbene/sample.daytrader7/actions/workflows/deploy.yml)
 
-Java EE7 DayTrader7 Sample
+A complete rewrite of IBM's [DayTrader 7](https://github.com/WASdev/sample.daytrader7) benchmark from Java EE 7 / EJB to **Spring Boot 3**, running on bare-metal **IBM POWER8 (ppc64le)** with PostgreSQL 16.
 
+📝 **Blog post:** [DayTrader, AIX, and Knowing When to Pivot](https://wordpress.debene.dev/2026/02/26/aix-power8-daytrader-modernization/)
 
-This sample contains the DayTrader 7 benchmark, which is an application built around the paradigm of an online stock trading system. The application allows users to login, view their portfolio, lookup stock quotes, and buy or sell stock shares. With the aid of a Web-based load driver such as Apache JMeter, the real-world workload provided by DayTrader can be used to measure and compare the performance of Java Platform, Enterprise Edition (Java EE) application servers offered by a variety of vendors. In addition to the full workload, the application also contains a set of primitives used for functional and performance testing of various Java EE components and common design patterns.
+## What Changed
 
-DayTrader is an end-to-end benchmark and performance sample application. It provides a real world Java EE workload. DayTrader's new design spans Java EE 7, including the new WebSockets specification. Other Java EE features include JSPs, Servlets, EJBs, JPA, JDBC, JSF, CDI, Bean Validation, JSON, JMS, MDBs, and transactions (synchronous and asynchronous/2-phase commit).
+| | Original (Java EE 7) | This Rewrite (Spring Boot 3) |
+|---|---|---|
+| **Framework** | EJB 3.2 / JSF 2.3 / JPA 2.2 | Spring Boot 3 / Thymeleaf / Spring Data JPA |
+| **Runtime** | WebSphere Liberty / OpenJ9 | JDK 21 (Temurin) |
+| **Database** | Embedded Derby | PostgreSQL 16 |
+| **UI** | JSP framesets + Dojo Toolkit | Thymeleaf + HTMX (vanilla JS polling) |
+| **Auth** | None / container-managed | Spring Security + Authentik SSO |
+| **Real-time** | WebSocket (Dojo) | HTMX `fetch()` polling every 10s |
+| **Build** | Maven multi-module EAR | Maven single JAR |
+| **Deploy** | Manual scp | GitHub Actions CI/CD |
+| **Infra** | WebSphere on x86 | Bare-metal POWER8 (Gentoo ppc64le) |
 
-This sample can be installed onto WAS Liberty runtime versions 8.5.5.6 and later. A prebuilt derby database is provided in resources/data
+## Architecture
 
-To run this sample, first [download](https://github.com/WASdev/sample.daytrader7/archive/master.zip) or clone this repo - to clone:
 ```
-git clone git@github.com:WASdev/sample.daytrader7.git
+Internet → Cloudflare Tunnel → Authentik Proxy (K8s) → IBM POWER8 S822
+                                                         ├── Spring Boot 3 (JDK 21)
+                                                         │   ├── Thymeleaf + HTMX UI
+                                                         │   ├── Spring Data JPA
+                                                         │   ├── Spring Security
+                                                         │   └── Market Summary (scheduled)
+                                                         └── PostgreSQL 16 (baremetal)
+                                                              └── springdb (15K users, 10K quotes)
 ```
 
-From inside the sample.daytrader7 directory, build and start the application in Open Liberty with the following command:
+| Component | Details |
+|-----------|---------|
+| **Hardware** | IBM S822 — Dual POWER8, 20 cores / 160 threads (SMT8), 128GB RAM |
+| **OS** | Gentoo Linux ppc64le, kernel 6.17.x |
+| **JDK** | Eclipse Temurin 21 (ppc64le) |
+| **Database** | PostgreSQL 16.12 (baremetal, same host) |
+| **Auth** | Authentik Proxy Outpost (external, K8s) |
+| **CI/CD** | GitHub Actions → self-hosted runner → SSH deploy |
+| **Migrations** | Flyway |
+
+## Project Structure
+
 ```
-mvn install
-cd daytrader-ee7
-mvn liberty:run
+├── daytrader-ee7/                  # Original Java EE 7 app (Liberty EAR)
+├── daytrader-ee7-ejb/              # Original EJBs, JPA entities
+├── daytrader-ee7-web/              # Original JSP/JSF web layer
+│
+├── daytrader-spring/               # ⭐ Spring Boot rewrite
+│   ├── src/main/java/com/ibm/daytrader/
+│   │   ├── config/                 # Security, WebSocket, properties
+│   │   ├── entity/                 # JPA entities (reused schema)
+│   │   ├── repository/             # Spring Data JPA repositories
+│   │   ├── service/                # Trade, MarketSummary, DatabaseInit
+│   │   ├── web/controller/         # Thymeleaf MVC controllers
+│   │   ├── dto/                    # Market summary, price DTOs
+│   │   └── event/                  # Order/price change events
+│   ├── src/main/resources/
+│   │   ├── application-prod.yml    # Production config
+│   │   └── templates/              # Thymeleaf templates
+│   ├── Dockerfile                  # JDK 21 ppc64le image
+│   └── docker-compose.prod.yml     # Production deployment
+│
+├── .github/workflows/deploy.yml    # CI/CD pipeline
+└── Dockerfile                      # Legacy Liberty image
 ```
 
-Once the server has been started, go to [http://localhost:9082/daytrader](http://localhost:9082/daytrader) to interact with the sample.
+## Quick Start
 
-### To containerize the application with DB2, you can run command 
+### Run locally
+
+```bash
+cd daytrader-spring
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
-docker build -t sample-daytrader7 -f Containerfile_db2 .
+
+### Production (POWER8)
+
+```bash
+cd daytrader-spring
+./mvnw clean package -DskipTests
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-## Notice
+Or just push to `master` — GitHub Actions handles the rest.
 
-© Copyright IBM Corporation 2015.
+### Seed the database
+
+First login creates the schema (Flyway). The app auto-seeds 15K users + 10K quotes on startup via `DatabaseInitService`.
+
+## Load Testing
+
+```bash
+# 15K users × 5 buy+sell trades, 20 concurrent sessions
+# Result: ~157 trades/sec on POWER8
+bash load-test.sh
+```
+
+## The Journey
+
+This project went through three distinct phases:
+
+1. **AIX KVM** — Got DayTrader running on AIX 7.2 inside a KVM VM on POWER8. Monkey-patched Python, nuked OpenSSL, survived.
+
+2. **Liberty + REST APIs** — Bolted JAX-RS endpoints onto the Java EE 7 app. 34 commits of chaos. PostgreSQL migration. OIDC auth loop from hell behind Cloudflare Tunnel. Docker Compose on ppc64le.
+
+3. **Spring Boot rewrite** — Archived `daytrader-modern`, came back to this repo, built a proper Spring Boot 3 app with Thymeleaf + HTMX. Same domain model, modern stack. Everything works.
+
+Full story: [DayTrader, AIX, and Knowing When to Pivot](https://wordpress.debene.dev/2026/02/26/aix-power8-daytrader-modernization/)
+
+## Why POWER8?
+
+Because running enterprise Java on a 20-core / 160-thread IBM POWER8 in a homelab is more fun than yet another x86 deployment. And because sometimes you need to prove that a 2005 benchmark can be modernized and deployed on hardware IBM itself would raise an eyebrow at.
+
+## Credits
+
+- Original DayTrader by IBM — [WASdev/sample.daytrader7](https://github.com/WASdev/sample.daytrader7)
+- Infrastructure managed by [Garra De Baitola](https://github.com/openclaw/openclaw) 🦞
 
 ## License
 
-```text
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-````
+Apache License 2.0 — see [LICENSE](LICENSE)
